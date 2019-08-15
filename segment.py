@@ -4,7 +4,8 @@ import numpy as np
 
 
 def detect_leaf(img):
-    l_b = np.array([30, 0, 50])
+    # This method returns the green part of the image
+    l_b = np.array([30, 0, 60])
     u_b = np.array([255, 255, 255])
 
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
@@ -12,10 +13,11 @@ def detect_leaf(img):
 
     res = cv2.bitwise_and(img, img, mask=mask)
 
-    return mask
+    return res
 
 
 def display_image(title, image):
+    # Function to display an image. Close window using ESC key
     cv2.namedWindow(title, cv2.WINDOW_NORMAL)
     cv2.resizeWindow(title, 600, 600)
     cv2.imshow(title, image)
@@ -31,6 +33,11 @@ def nothing(x):
 
 
 def check_HLS(img):
+    '''
+    Creates a tracker with adjustable sliders for the H, L and S
+    values of an image. Use this function to find the boundaries of HSL
+    values which can be used as the mask for color based segmentation
+    '''
 
     cv2.namedWindow("Tracker")
     cv2.createTrackbar("LH", "Tracker", 0, 255, nothing)
@@ -41,7 +48,7 @@ def check_HLS(img):
     cv2.createTrackbar("US", "Tracker", 255, 255, nothing)
 
     while True:
-
+        # Convert to HLS Color space
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
 
         l_h = cv2.getTrackbarPos("LH", "Tracker")
@@ -52,16 +59,15 @@ def check_HLS(img):
         u_l = cv2.getTrackbarPos("UL", "Tracker")
         u_s = cv2.getTrackbarPos("US", "Tracker")
 
+        # Get the values from the sliders
         l_b = np.array([l_h, l_l, l_s])
         u_b = np.array([u_h, u_l, u_s])
 
+        # Generate masks
         mask = cv2.inRange(hsv, l_b, u_b)
 
         res = cv2.bitwise_and(hsv, hsv, mask=mask)
         res2 = cv2.bitwise_and(img, img, mask=mask)
-
-        blurred = cv2.GaussianBlur(res, (3, 3), 0)
-        laplacian = cv2.Laplacian(blurred, ddepth=-1)
 
         cv2.namedWindow('image', cv2.WINDOW_NORMAL)
         cv2.resizeWindow('image', 600, 600)
@@ -84,6 +90,10 @@ def check_HLS(img):
 
 
 def check_Canny(img):
+    '''
+    Creates a tracker with adjustable sliders for the maxval and minval
+    for the hysteresis thresholding of canny edge detection algorithm.
+    '''
     cv2.namedWindow("Tracker")
     cv2.createTrackbar("LB", "Tracker", 0, 255, nothing)
     cv2.createTrackbar("UB", "Tracker", 255, 255, nothing)
@@ -113,15 +123,15 @@ def equalize_histogram_color(img):
     return img
 
 
-img = cv2.imread("7.jpeg")
+img = cv2.imread("Images/5.jpeg")
 eq = equalize_histogram_color(img)
-# check_HLS(img)
+check_HLS(img)
 
 
 display_image("Image", img)
 display_image("Equalized", eq)
 
-lap = cv2.Sobel(eq, dx=1, dy=1, ddepth=-1)
+lap = cv2.Laplacian(eq, ddepth=-1)
 display_image("Lap", lap)
 
 blur = cv2.GaussianBlur(lap, (5, 5), 0)
