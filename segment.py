@@ -1,5 +1,6 @@
+from sklearn.cluster import DBSCAN
 import cv2
-import matplotlib.pyplot as plt
+import imutils
 import numpy as np
 
 
@@ -89,31 +90,22 @@ def check_HLS(img):
     cv2.destroyAllWindows()
 
 
-def check_Canny(img):
-    '''
-    Creates a tracker with adjustable sliders for the maxval and minval
-    for the hysteresis thresholding of canny edge detection algorithm.
-    '''
-    cv2.namedWindow("Tracker")
-    cv2.createTrackbar("LB", "Tracker", 0, 255, nothing)
-    cv2.createTrackbar("UB", "Tracker", 255, 255, nothing)
-    while True:
+def get_canny(img):
 
-        l_b = cv2.getTrackbarPos("LB", "Tracker")
-        u_b = cv2.getTrackbarPos("UB", "Tracker")
+    eq = equalize_histogram_color(img)
+    gray = cv2.cvtColor(eq, cv2.COLOR_BGR2GRAY)
+    lap = cv2.Laplacian(gray, ddepth=-1)
+    blur = cv2.GaussianBlur(lap, (5, 5), 0)
 
-        canny = cv2.Canny(img, l_b, u_b)
+    v = np.median(gray)
+    sigma = 0.33
 
-        cv2.namedWindow('Canny', cv2.WINDOW_NORMAL)
-        cv2.resizeWindow('Canny', 600, 600)
-        cv2.imshow("Canny", canny)
+    # ---- apply optimal Canny edge detection using the computed median----
+    lower_thresh = int(max(0, (1.0 - sigma) * v))
+    upper_thresh = int(min(255, (1.0 + sigma) * v))
+    edges = cv2.Canny(blur, lower_thresh, upper_thresh)
 
-        key = cv2.waitKey(1)
-        if key == 27:
-            break
-
-    # cap.release()
-    cv2.destroyAllWindows()
+    return edges
 
 
 def equalize_histogram_color(img):
@@ -123,19 +115,22 @@ def equalize_histogram_color(img):
     return img
 
 
-img = cv2.imread("Images/5.jpeg")
-eq = equalize_histogram_color(img)
-check_HLS(img)
-
-
+img = cv2.imread("Images/11.jpeg")
+edges = get_canny(img)
 display_image("Image", img)
-display_image("Equalized", eq)
+display_image("Canny Edges", edges)
 
-lap = cv2.Laplacian(eq, ddepth=-1)
-display_image("Lap", lap)
+num_contours = 999
+result = edges.copy()
 
-blur = cv2.GaussianBlur(lap, (5, 5), 0)
-display_image("Lap", blur)
+while(num_contours > 5):
+    contours, hierarchy = cv2.findContours(result.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    out = np.zeros_like(img)
 
-edges = cv2.Canny(blur, 50, 150)
-display_image("Edges", edges)
+    result = cv2.drawContours(out, contours, -1, (0, 255, 0), 5)
+    result = cv2.cvtColor(result, cv2.COLOR_RGB2GRAY)
+    display_image("Contours", result)
+    num_contours = len(contours)
+
+result = cv2.drawContours(img, contours, -1, (0, 255, 0), 5)
+display_image("Contours", result)
