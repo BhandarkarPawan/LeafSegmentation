@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "567334892978",
+    "firebase_url": "https://leafdoctor-x.firebaseio.com",
+    "project_id": "leafdoctor-x",
+    "storage_bucket": "leafdoctor-x.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:567334892978:android:c2e40d00604a4a6057e0ab",
+        "android_client_info": {
+          "package_name": "com.example.leafdoctor"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "567334892978-6dskn31o88l7vdcn62eji8papqnraq3u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.leafdoctor",
+            "certificate_hash": "2bf5ce0a4c6da51bc76bda1b6fc760679d9ca293"
+          }
+        },
+        {
+          "client_id": "567334892978-6pji53irs7eg5l72q3vhohstvnssul8e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAf-KGuj08BUAFSlzy2PbUzWN5RAM9ViUc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "567334892978-6pji53irs7eg5l72q3vhohstvnssul8e.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

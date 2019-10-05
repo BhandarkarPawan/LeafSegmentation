@@ -1,7 +1,21 @@
-from sklearn.cluster import DBSCAN
 import cv2
-import imutils
 import numpy as np
+from glob import glob
+import matplotlib.pyplot as plt
+from matplotlib import cm
+
+
+def mouse_callback(event, x, y, flags, param):
+    global marks_updated
+
+    if event == cv2.EVENT_LBUTTONDOWN:
+
+        # TRACKING FOR MARKERS
+        cv2.circle(marker_image, (x, y), 10, (current_marker), -1)
+
+        # DISPLAY ON USER IMAGE
+        cv2.circle(img_copy, (x, y), 10, colors[current_marker], -1)
+        marks_updated = True
 
 
 def detect_leaf(img):
@@ -19,8 +33,8 @@ def detect_leaf(img):
 
 def display_image(title, image):
     # Function to display an image. Close window using ESC key
-    cv2.namedWindow(title, cv2.WINDOW_NORMAL)
-    cv2.resizeWindow(title, 600, 600)
+    # cv2.namedWindow(title, cv2.WINDOW_NORMAL)
+    # cv2.resizeWindow(title, 600, 600)
     cv2.imshow(title, image)
     while True:
         key = cv2.waitKey(1)
@@ -92,18 +106,13 @@ def check_HLS(img):
 
 def get_canny(img):
 
-    eq = equalize_histogram_color(img)
-    gray = cv2.cvtColor(eq, cv2.COLOR_BGR2GRAY)
-    lap = cv2.Laplacian(gray, ddepth=-1)
-    blur = cv2.GaussianBlur(lap, (5, 5), 0)
-
-    v = np.median(gray)
+    v = np.median(img)
     sigma = 0.33
 
     # ---- apply optimal Canny edge detection using the computed median----
     lower_thresh = int(max(0, (1.0 - sigma) * v))
     upper_thresh = int(min(255, (1.0 + sigma) * v))
-    edges = cv2.Canny(blur, lower_thresh, upper_thresh)
+    edges = cv2.Canny(img, lower_thresh, upper_thresh)
 
     return edges
 
@@ -115,22 +124,99 @@ def equalize_histogram_color(img):
     return img
 
 
-img = cv2.imread("Images/11.jpeg")
-edges = get_canny(img)
-display_image("Image", img)
-display_image("Canny Edges", edges)
+def get_contour(img, num_contours=999):
+    edges = get_canny(img)
+    result = edges.copy()
 
-num_contours = 999
-result = edges.copy()
+    while(num_contours > 5):
+        contours, hierarchy = cv2.findContours(
+            result.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+        out = np.zeros_like(img)
 
-while(num_contours > 5):
-    contours, hierarchy = cv2.findContours(result.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
-    out = np.zeros_like(img)
+        result = cv2.drawContours(out, contours, -1, (0, 255, 0), 5)
+        result = cv2.cvtColor(result, cv2.COLOR_RGB2GRAY)
+        display_image("Contours", result)
+        num_contours = len(contours)
 
-    result = cv2.drawContours(out, contours, -1, (0, 255, 0), 5)
-    result = cv2.cvtColor(result, cv2.COLOR_RGB2GRAY)
+    result = cv2.drawContours(img, contours, -1, (0, 255, 0), 5)
     display_image("Contours", result)
-    num_contours = len(contours)
 
-result = cv2.drawContours(img, contours, -1, (0, 255, 0), 5)
-display_image("Contours", result)
+
+def create_rgb(i):
+    x = np.array(cm.tab10(i))[:3]*255
+    return tuple(x)
+
+
+'''================================Test Area================================'''
+OnePlus = glob('./Images/OnePlus 7/*')
+Xiaomi = glob('./Images/Xiaomi Note 3/*')
+
+
+img = cv2.imread(OnePlus[5])
+img = cv2.resize(img, (img.shape[1]//5, img.shape[0]//5))
+# display_image("Image " + str(img.shape), img)
+
+
+eq = equalize_histogram_color(img)
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+# display_image("Gray ", gray)
+
+blur = cv2.GaussianBlur(gray, (7, 7), 0)
+lap = cv2.Laplacian(blur, ddepth=-1)
+# display_image("LoG", lap)
+
+edges = get_canny(blur)
+# display_image("Edges", edges)
+
+
+'''
+=================WaterShed Starts here========================== '''
+img_copy = np.copy(eq)
+colors = []
+n_markers = 10
+
+# One color for each single digit
+for i in range(10):
+    colors.append(create_rgb(i))
+current_marker = 1
+marks_updated = False
+segments = np.zeros(img.shape, dtype=np.uint8)
+marker_image = np.zeros(img.shape[:2], dtype=np.int32)
+
+cv2.namedWindow('Road Image')
+cv2.setMouseCallback('Road Image', mouse_callback)
+
+while True:
+
+    # SHow the 2 windows
+    cv2.imshow('WaterShed Segments', segments)
+    cv2.imshow('Road Image', img_copy)
+
+    #
+    k = cv2.waitKey(1)
+
+    # Close everything if Esc is pressed
+    if k == 27:
+        break
+
+    # Clear all colors and start over if 'c' is pressed
+    elif k == ord('c'):
+        img_copy = img.copy()
+        marker_image = np.zeros(img.shape[0:2], dtype=np.int32)
+        segments = np.zeros(img.shape, dtype=np.uint8)
+
+    # If a number 0-9 is chosen index the color
+    elif k > 0 and chr(k).isdigit():
+        current_marker = int(chr(k))
+    if marks_updated:
+
+        marker_image_copy = marker_image.copy()
+        cv2.watershed(img, marker_image_copy)
+
+        segments = np.zeros(img.shape, dtype=np.uint8)
+        for color_ind in range(n_markers):
+            segments[marker_image_copy == (color_ind)] = colors[color_ind]
+
+        marks_updated = False
+
+cv2.destroyAllWindows()
