@@ -1,5 +1,6 @@
 package com.example.leafdoctor;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -14,11 +15,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 
 import com.google.android.gms.tasks.OnFailureListener;
@@ -49,9 +52,11 @@ public class MainActivity extends AppCompatActivity {
     private static int mode;
     static Context context;
     static ProgressBar p;
+    private static TextView disease;
 
     FloatingActionButton send;
     static Bitmap bitmap;
+    public static String disease_percent = "";
 
     FirebaseStorage storage;
     StorageReference storageReference;
@@ -66,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
         storage = FirebaseStorage.getInstance();
         storageReference = storage.getReference();
 
+        disease = findViewById(R.id.disease_percent);
         camera = findViewById(R.id.camera_button);
         gallery = findViewById(R.id.gallery_button);
         save = findViewById(R.id.save_button);
@@ -73,11 +79,13 @@ public class MainActivity extends AppCompatActivity {
         send = findViewById(R.id.send_button);
         p = findViewById(R.id.progressBar);
 
+        ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
         p.setVisibility(View.INVISIBLE);
 
         send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                disease.setText(disease_percent.replace("Success", "Disease Percentage: "));
 
                 p.setVisibility(View.VISIBLE);
 
@@ -87,6 +95,8 @@ public class MainActivity extends AppCompatActivity {
                     p.setVisibility(View.INVISIBLE);
                     return;
                 }
+
+
 
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
@@ -110,13 +120,16 @@ public class MainActivity extends AppCompatActivity {
                         // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
                         // ...
                         new ServerComms().execute("Success");
+
                         Toast.makeText(getApplicationContext(),  "Success", Toast.LENGTH_SHORT).show();
+                        disease.setText(disease_percent.replace("Success", "Disease Percentage: "));
                     }
                 });
 
 
             }
         });
+        
 
 
         camera.setOnClickListener(new View.OnClickListener() {
@@ -197,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
+       
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -262,7 +275,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         try {
-
+            Log.v(LOG_TAG, disease_percent.replace("Success", "Disease Percentage: "));
             final File localFile = File.createTempFile("mask", "jpg");
             targetRef.getFile(localFile).addOnSuccessListener(new OnSuccessListener< FileDownloadTask.TaskSnapshot >() {
                 @Override

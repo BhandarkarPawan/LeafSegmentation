@@ -29,7 +29,7 @@ public class ServerComms extends AsyncTask<String, Void, String> {
             String header = String.format("%10s", message.length());
             message = header + message;
 
-            server = new Socket("192.168.0.107", 1234);  //connect to server
+            server = new Socket("192.168.43.228", 1234);  //connect to server
             printwriter = new PrintWriter(server.getOutputStream(), true);
             printwriter.write(message);  //write the message to output stream
             printwriter.flush();
@@ -43,9 +43,11 @@ public class ServerComms extends AsyncTask<String, Void, String> {
 
             Log.v(LOG_TAG, response.equals("Success") + "");
 
-            if(response.equals("Success"))
+            if(response.startsWith("Success")) {
+                MainActivity.disease_percent = response;
                 MainActivity.fetch_mask();
 
+            }
             server.close();
             printwriter.close();
 

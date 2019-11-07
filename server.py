@@ -24,7 +24,7 @@ db = firestore.client()
 HEADERSIZE = 10
 SUCCESS = "Success"
 FAILED = "Failed"
-SERVER_IP = '192.168.0.107'
+SERVER_IP = '192.168.43.228'
 SERVER_PORT = 1234
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -87,14 +87,31 @@ while True:
 
         # Color correction
         final = cv2.cvtColor(final, cv2.COLOR_BGR2RGB)
-        cv2.imwrite(outfile, final)
-        # print("Image Saved!")
+        hsv = cv2.cvtColor(final, cv2.COLOR_BGR2HSV)
+
+        l_b = np.array([1, 0, 0])
+        u_b = np.array([255, 255, 255])
+
+        # Generate masks
+        mask = cv2.inRange(hsv, l_b, u_b)
+        total = mask.sum()
+
+        l_b = np.array([1, 0, 0])
+        u_b = np.array([30, 255, 255])
+
+        # Generate masks
+        mask = cv2.inRange(hsv, l_b, u_b)
+        disease = mask.sum()
 
         # Save the file locally
+        cv2.imwrite(outfile, final)
+        print("Image Saved!")
+
+        # Upload file to Firebase
         with open(outfile, 'rb') as my_file:
             blob.upload_from_file(my_file)
-        # print("Upload Done")
+        print("Upload Done")
 
         # Report Success to the app
-        clientsocket.send(bytes(SUCCESS+"\n", 'utf-8'))
-        #  print("Message Sent!")
+        clientsocket.send(bytes("Success" + str(round(disease/total * 100, 2)) + "%\n", 'utf-8'))
+        print("Message Sent!")
