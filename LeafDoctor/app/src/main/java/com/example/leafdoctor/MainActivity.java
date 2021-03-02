@@ -97,7 +97,6 @@ public class MainActivity extends AppCompatActivity {
                 }
 
 
-
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
 
@@ -183,9 +182,6 @@ public class MainActivity extends AppCompatActivity {
         return image;
     }
 
-
-
-
     private void dispatchTakePictureIntent() {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Ensure that there's a camera activity to handle the intent
@@ -210,7 +206,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-       
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -235,10 +230,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void galleryAddPic() {
-
-
         MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, "Leaf" , "Masked af");
-
         Toast.makeText(this, "Image Saved!", Toast.LENGTH_SHORT).show();
     }
 
@@ -270,9 +262,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
     protected static void fetch_mask(){
-
 
         try {
             Log.v(LOG_TAG, disease_percent.replace("Success", "Disease Percentage: "));

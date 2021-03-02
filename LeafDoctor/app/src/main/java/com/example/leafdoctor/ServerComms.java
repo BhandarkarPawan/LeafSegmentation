@@ -52,8 +52,6 @@ public class ServerComms extends AsyncTask<String, Void, String> {
             printwriter.close();
 
 
-
-
         } catch (UnknownHostException e) {
             e.printStackTrace();
             return "Host Unknown";

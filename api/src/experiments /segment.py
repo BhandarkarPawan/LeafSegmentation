@@ -25,9 +25,7 @@ def detect_leaf(img):
 
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2H)
     mask = cv2.inRange(hsv, l_b, u_b)
-
     res = cv2.bitwise_and(img, img, mask=mask)
-
     return res
 
 
